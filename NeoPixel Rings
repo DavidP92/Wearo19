@@ -5,9 +5,11 @@
  
 #define bigO 6
 #define medO 9
+#define lilO 3
 
 #define ledM 16
 #define ledB 24
+#define ledS 12
 
 #define MBRIGHTNESS 30
 #define BBRIGHTNESS 50
@@ -22,24 +24,32 @@ bool brightnessDir = false;
 
 Adafruit_NeoPixel strip0 = Adafruit_NeoPixel(ledB, bigO, NEO_RGBW + NEO_KHZ800);
 Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(ledM, medO, NEO_RGBW + NEO_KHZ800);
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(ledS, lilO, NEO_RGBW + NEO_KHZ800);
  
 void setup() {
   setupPixels(&strip0);
   setupPixels(&strip1);
-
+  setupPixels(&strip2);
   Serial.begin(9600);
 }
  
 void loop() {
   // Some example procedures showing how to display to the pixels:
-//  setPColor(&strip0, clear_led, clear_bright); // Turn Off
-//  uint8_t a[] = {1, 255, 1, 1};
-//  delay(50);
-//  setPColor(&strip0, a, 50);
-//  delay(1000);
+ /*
+  setPColor(&strip0, clear_led, clear_bright);  //Turn Off
+  setPColor(&strip1,clear_led,clear_bright);  // Turn Off
+  setPColor(&strip2,clear_led,clear_bright);
+  uint8_t a[] = {1, 255, 1, 1};   //Designate Color of strip0
+  uint8_t b[] = {1,255,55,55}; //Designate Color of strip1
+  uint8_t c[] = {1,125,255,255};
+  delay(50);
+  setPColor(&strip0, a, 50); setPColor(&strip1, b, 50); setPColor(&strip2,c,50);
+  delay(100);
+  */
   rainbow(&strip1, 10);
-  rainbow(&strip0, 10);
-//  delay(1000);
+  rainbow(&strip0, 15);
+  rainbow(&strip2,10);
+  delay(1000);
 }
 
 
@@ -84,7 +94,7 @@ void dynamicBrightness() {
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
 uint32_t Wheel(Adafruit_NeoPixel *obj, byte WheelPos) {
-  if(WheelPos < 85) 
+  if(WheelPos < 85) {
    return obj->Color(WheelPos * 3, 255 - WheelPos * 3, 0);
   } else if(WheelPos < 170) {
    WheelPos -= 85;
