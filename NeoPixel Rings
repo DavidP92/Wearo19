@@ -17,7 +17,7 @@
 const uint8_t clear_led[4] = {255, 255, 255, 255};
 const uint8_t clear_bright = 0;
 
-#define MAXBRIGHTNESS 50
+#define MAXBRIGHTNESS 30
 #define MINBRIGHTNESS 0
 uint8_t modBrightness = 0;
 bool brightnessDir = false;
@@ -35,17 +35,32 @@ void setup() {
  
 void loop() {
   // Some example procedures showing how to display to the pixels:
- /*
+  uint8_t a[] = {1, 1, 255, 50};   //Designate Color of strip0
+  uint8_t b[] = {1,255,1,25}; //Designate Color of strip1
+  uint8_t c[] = {255,1,1,15};
+  delay(50);
+  
+  setPColor(&strip0, a, 50); setPColor(&strip1, b, 50); setPColor(&strip2,c,50);
+  delay(1500);
+  
   setPColor(&strip0, clear_led, clear_bright);  //Turn Off
   setPColor(&strip1,clear_led,clear_bright);  // Turn Off
   setPColor(&strip2,clear_led,clear_bright);
-  uint8_t a[] = {1, 255, 1, 1};   //Designate Color of strip0
-  uint8_t b[] = {1,255,55,55}; //Designate Color of strip1
-  uint8_t c[] = {1,125,255,255};
-  delay(50);
-  setPColor(&strip0, a, 50); setPColor(&strip1, b, 50); setPColor(&strip2,c,50);
-  delay(100);
-  */
+
+  setPColor(&strip0, b, 50); setPColor(&strip1, c, 50); setPColor(&strip2,a,50);
+  delay(1500);  
+  
+  setPColor(&strip0, clear_led, clear_bright);  //Turn Off
+  setPColor(&strip1,clear_led,clear_bright);  // Turn Off
+  setPColor(&strip2,clear_led,clear_bright);
+
+  setPColor(&strip0, c, 50); setPColor(&strip1, a, 50); setPColor(&strip2,b,50);
+  delay(1500);  
+  
+  setPColor(&strip0, clear_led, clear_bright);  //Turn Off
+  setPColor(&strip1,clear_led,clear_bright);  // Turn Off
+  setPColor(&strip2,clear_led,clear_bright);
+
   rainbow(&strip1, 10);
   rainbow(&strip0, 15);
   rainbow(&strip2,10);
