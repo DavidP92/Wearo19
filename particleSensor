@@ -13,21 +13,21 @@ float beatsPerMin;
 int beatAvg;
 
 //Variables for agentCheck
-long samples = 0; // Counter for Caluculating the Hz or Reading Rate
-long block;  //Average IR at power up
-long startTime;   //Used to calculate measurement rate
+long samples = 0;         // Counter for Caluculating the Hz or Reading Rate
+long block;               //Average IR at power up
+long startTime;           //Used to calculate measurement rate
 long delta;
 
 //Variable for Infrared 
 long IR;
 
-//Setup Variables for Particle Sensor
-byte ledBrightness = 0xFF; //Options: 0=Offto 255=50mA
-byte sampleAverage = 4;    //Options: 1,2,4,8,16,32
+                             //Setup Variables for Particle Sensor
+byte ledBrightness = 0xFF;   //Options: 0=Offto 255=50mA
+byte sampleAverage = 4;      //Options: 1,2,4,8,16,32
 byte ledMode = 2;            //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
-int sampleRate = 400;     //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
-int pulseWidth = 411;     //Options: 69, 118, 215, 411
-int adcRange = 2048;      //Options: 2048, 4096, 8192, 16384
+int sampleRate = 400;        //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
+int pulseWidth = 411;        //Options: 69, 118, 215, 411
+int adcRange = 2048;         //Options: 2048, 4096, 8192, 16384
 
 void setup(){
   pulseSetup();
@@ -35,53 +35,39 @@ void setup(){
 }
 
 void loop(){
- heartCheck();
-}
+  agentCheck();
+  if(IR > 10000){
+    heartCheck();
+    if(beatAvg > 60){
+      temperatureCheck();
+    }
+  }
+  else
+    Serial.println("Please touch sensor!");
+  }
+
 void pulseSetup(){
  Serial.begin(115200);
- if (pulseSensor.begin(Wire,I2C_SPEED_FAST) == false){
-  Serial.println("Pulse Senso not detected.... Check wiring or Connection...");
+ if (!pulseSensor.begin(Wire,I2C_SPEED_FAST)){
+  Serial.println("Pulse Sensor not detected.... Check wiring or Connection...");
   while (1);
  }
  Serial.println("Pressure on sensor may be needed...");
  
-/// pulseSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
- pulseSensor.setup(); //Configure sensor with default settings
- pulseSensor.setPulseAmplitudeRed(0x0A); //Turn Red LED to low to indicate sensor is running
- pulseSensor.setPulseAmplitudeGreen(0); //Turn off Green LED 
+ pulseSensor.setup();                       //Configure sensor with default settings
+ pulseSensor.setPulseAmplitudeRed(0x0A);    //Turn Red LED to low to indicate sensor is running
+ pulseSensor.setPulseAmplitudeGreen(0);     //Turn off Green LED 
 }
 
 void agentCheck(){
- block = 0;
- 
- for (byte x = 0; x < 32; x++){
-  block += pulseSensor.getIR();
- }
- block /= 32;
- startTime = millis();
-
-  Serial.print("[IR: "); 
-  Serial.print(IR);
-  Serial.print("]  [Hz:  ");
-  Serial.print((float)samples / ((millis() - startTime) / 1000.0), 2);
-  Serial.print("]");
-
-  delta = pulseSensor.getIR() - block;
-  Serial.print("IBB:  ");   //Interval between betweens
-  Serial.print(delta);
-  Serial.print("]             ");
-    samples++;
-  
-  if (delta > (long)100){
-    Serial.println("Something is detected or near!");
+  IR = pulseSensor.getIR();
+  if(IR > 10000){
+    Serial.println("Agent Detected!");
   }
-  
   else
     Serial.println();
 }
-void temperatureSetup(){
-    pulseSensor.setup(0);
-}
+
 void temperatureCheck(){
 
   float temperatureC;
@@ -102,7 +88,7 @@ void heartCheck(){
   {
     delta = millis() - block;
     block = millis();
-    beatsPerMin = 60 / (block/1000.0);
+    beatsPerMin = 60 / (delta / 1000.0);
 
     if (beatsPerMin < 255 && beatsPerMin > 20)
     {
@@ -123,8 +109,9 @@ void heartCheck(){
   Serial.print(beatsPerMin);
   Serial.print("      ");
   Serial.println(beatAvg); 
-
+/*
   if (IR < 50000)
     Serial.print("No Finger Present.....");
   Serial.println();
+*/
 }
