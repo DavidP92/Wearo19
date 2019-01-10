@@ -21,7 +21,16 @@ long delta;
 //Variable for Infrared 
 long IR;
 
-                             //Setup Variables for Particle Sensor
+//Timer Variables
+unsigned long timer_1;  // Timer -> agentCheck
+unsigned long timer_2;  // Timer -> heartCheck
+unsigned long timer_3;   // Timer -> temperatureCheck
+
+uint8_t delay_1 = 15;   // agentCheck
+uint8_t delay_2 = 50;    // heartCheck
+uint8_t delay_3 = 200;   // temperatureCheck
+
+//Setup Variables for Particle Sensor
 byte ledBrightness = 0xFF;   //Options: 0=Offto 255=50mA
 byte sampleAverage = 4;      //Options: 1,2,4,8,16,32
 byte ledMode = 2;            //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
@@ -31,16 +40,27 @@ int adcRange = 2048;         //Options: 2048, 4096, 8192, 16384
 
 void setup(){
   pulseSetup();
+  timer_1 = millis();
+  timer_2 = timer_1;
+  timer_3 = timer_2;
+
   delay(1000);
 }
 
 void loop(){
-  agentCheck();
-  if(IR > 10000){
+  unsigned long now = millis();
+  
+  if(now - timer_1 > delay_1){
+    agentCheck();
+    timer_1 = now;
+  }
+  if(now - timer_2 > delay_2){
     heartCheck();
-    if(beatAvg > 60){
-      temperatureCheck();
-    }
+    timer_2 = now;
+  }
+  if(now-timer_3 > delay_3){
+    temperatureCheck();
+    timer_3 = now;
   }
   else
     Serial.println("Please touch sensor!");
