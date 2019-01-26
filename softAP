@@ -1,10 +1,7 @@
-
-// Load Wi-Fi library
 #include <WiFi.h>
-
 // Replace with your network credentials
-const char* ssid     = "E-Hoodie";
-const char* password = "goldenGoose";
+const char network[] = "E_Hoodie";
+const char key[] = "goldenGoose";
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -28,11 +25,12 @@ void setup() {
   // Set outputs to LOW
   digitalWrite(output26, LOW);
   digitalWrite(output27, LOW);
+  
+  // Remove the password parameter, if you want the AP (Access Point) to be open
+  WiFi.softAP(network, key);
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Setting AP (Access Point)…");
-  // Remove the password parameter, if you want the AP (Access Point) to be open
-  WiFi.softAP(ssid, password);
 
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
@@ -62,7 +60,7 @@ void loop(){
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
-            
+ //LED ON/OFF Commands          || Edit Sensor Here || 
             // turns the GPIOs on and off
             if (header.indexOf("GET /26/on") >= 0) {
               Serial.println("GPIO 26 on");
@@ -88,8 +86,8 @@ void loop(){
             client.println("<link rel=\"icon\" href=\"data:,\">");
             // CSS to style the on/off buttons 
             // Feel free to change the background-color and font-size attributes to fit your preferences
-            client.println("<style>html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background-color: #4CAF50; border: none; color: white; padding: 16px 40px;");
+            client.println("<style>html { font-family: Serif; display: inline-block; margin: 0px auto; text-align: center;}");
+            client.println(".button { background:linear-gradient(to bottom, #ff0000 0%, #666699 100%); border: none; color: white; padding: 16px 40px;");
             client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
             client.println(".button2 {background-color: #555555;}</style></head>");
             
