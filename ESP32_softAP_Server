@@ -98,7 +98,7 @@ void loop() {
             client.println("Content-type:text/html");
             client.println("Connection: close");
             client.println();
-            //LED ON/OFF Commands          || Edit Sensor Here ||
+ ///////           || Edit Sensor Here ||
             // turns the GPIOs on and off
             if (header.indexOf("GET /26/on") >= 0) {
               Serial.println("GPIO 26 on");
