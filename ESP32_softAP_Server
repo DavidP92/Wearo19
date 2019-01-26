@@ -117,7 +117,7 @@ void loop() {
             client.println("<link rel=\"icon\" href=\"data:,\">");
             // CSS to style the on/off buttons
             // Feel free to change the background-color and font-size attributes to fit your preferences
-            client.println("<style>html { font-family: Serif; display: inline-block; margin: 0px auto; text-align: center;}");
+            client.println("<style>html {background: radial-gradient(circle, rgba(242,236,10,1) 0%, rgba(121,9,24,1) 35%, rgba(0,255,162,1) 100%) font-family: Serif; display: inline-block; margin: 0px auto; text-align: center;}");
             client.println(".button { background:linear-gradient(to bottom, #ff0000 0%, #666699 100%); border: none; color: white; padding: 16px 40px;");
             client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: grab;}");
             client.println(".button2 {background:linear-gradient(to bottom, #ff0000 0%, #666699 100%)}</style></head>");
