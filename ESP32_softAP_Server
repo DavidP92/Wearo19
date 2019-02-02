@@ -2,11 +2,10 @@
 //But also to have some visual effects with Adafruit Neopixel Rings
 
 #include <WiFi.h>
-#include <WiFiClient.h>
 #include <Wire.h>
 #include "MAX30105.h"
 #include "heartRate.h"
-#include "index.h"
+
 
 MAX30105 pulseSensor;
 
@@ -58,11 +57,6 @@ uint8_t delay_3 = 200;   // temperatureCheck
 String outputState_1 = "off";
 String outputState_2 = "off";
 
-void handleRoot() {
- Serial.println("Root Page Called upon....");
- String s = MAIN_page; //Read HTML contents
-// server.send(200, "text/html", s);
-}
 void healthCheck(){
   IR = pulseSensor.getIR();
   if (checkForBeat(IR) == true)
@@ -136,7 +130,7 @@ void agentCheck() {
 } 
 
 void setup() {
-  pulseSetup();
+ // pulseSetup();
   Serial.begin(115200);
   Serial.println("Starting Setup........!");
   WiFi.mode(WIFI_AP);
