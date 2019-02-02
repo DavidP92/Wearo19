@@ -132,7 +132,7 @@ void agentCheck() {
     Serial.println("Agent Detected!");
   }
   else
-    Serial.println();
+    Serial.println("Still Attempting to locate Agent Presence.......");
 } 
 
 void setup() {
