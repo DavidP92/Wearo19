@@ -1,23 +1,27 @@
-//Written By David Paez | January 26, 2019 | The purpose was a wearable garment with environmental and health sensor for agent convience.
-//But also to have some visual effects with Adafruit Neopixel Rings
 
+// Load Wi-Fi library
 #include <WiFi.h>
 #include <Wire.h>
 #include "MAX30105.h"
 #include "heartRate.h"
 
-
 MAX30105 pulseSensor;
 
+
 // Replace with your network credentials
-const char network[] = "E_Hoodie";
-const char key[] = "goldenGoose";
+const char* ssid     = "E_Hoodie";
+const char* password = "goldenGoose";
 
 // Set web server port number to 80
 WiFiServer server(80);
 
 // Variable to store the HTTP request
 String header;
+
+// Auxiliar variables to store the current output state
+String environmentalState = "off";
+String healthState = "off";
+String lightState = "off";
 
 //Variables for Heart Rate
 const byte RATE_AMT = 4;  // Increase for Average Amount
@@ -53,12 +57,9 @@ uint8_t delay_1 = 15;   // agentCheck
 uint8_t delay_2 = 50;    // heartCheck
 uint8_t delay_3 = 200;   // temperatureCheck
 
-//Assign Output Variables
-String outputState_1 = "off";
-String outputState_2 = "off";
-
-void healthCheck(){
+void healthCheck() {
   IR = pulseSensor.getIR();
+
   if (checkForBeat(IR) == true)
   {
     delta = millis() - block;
@@ -89,8 +90,9 @@ void healthCheck(){
       Serial.print("No Finger Present.....");
     Serial.println();
   */
+  delay(500);
 }
-void environmentCheck(){
+void environmentCheck() {
   String tempC;
   String tempF;
   float temperatureC;
@@ -106,57 +108,42 @@ void environmentCheck(){
   Serial.println(temperatureF, 4);
   tempF = temperatureF;
   tempC = temperatureC;
+  delay(500);
 }
-void pulseSetup() {
-  if (!pulseSensor.begin(Wire, I2C_SPEED_FAST)) {
-    Serial.println("Pulse Sensor not detected.... Check wiring or Connection...");
-    while (1);
-  }
-  else
-  Serial.println("Pressure on sensor may be needed....");
+
+void setup() {
+  Serial.begin(115200);
+  timer_1 = millis();
+  timer_2 = timer_1;
+  timer_3 = timer_2;
+  //Particle Sensor Setup
+    if (!pulseSensor.begin(Wire, I2C_SPEED_FAST)) {
+      Serial.println("Pulse Sensor not detected.... Check wiring or Connection...");
+      while (1);
+    }
+    else
+      Serial.println("Pressure on sensor may be needed....");
 
   pulseSensor.setup();                       //Configure sensor with default settings
   pulseSensor.setPulseAmplitudeRed(0x0A);    //Turn Red LED to low to indicate sensor is running
   pulseSensor.setPulseAmplitudeGreen(0);     //Turn off Green LED
-}
-
-void agentCheck() {
-  IR = pulseSensor.getIR();
-  if (IR > 10000) {
-    Serial.println("Agent Detected!");
-  }
-  else
-    Serial.println("Still Attempting to locate Agent Presence.......");
-} 
-
-void setup() {
- // pulseSetup();
-  Serial.begin(115200);
-  Serial.println("Starting Setup........!");
-  WiFi.mode(WIFI_AP);
-  // Remove the password parameter, if you want the AP (Access Point) to be open
-  WiFi.softAP(network, key);
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Setting AP (Access Point)…");
+  // Remove the password parameter, if you want the AP (Access Point) to be open
+  WiFi.softAP(ssid, password);
 
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
-  //pulseSetup();
-  timer_1 = millis();
-  timer_2 = timer_1;
-  timer_3 = timer_2;
-
+  
   server.begin();
-  Serial.println("Setup Completed.......");
 }
 
-void loop() {
-  unsigned long now = millis();
+void loop(){
   WiFiClient client = server.available();   // Listen for incoming clients
-  Serial.println("Starting Loop.......");
-  if(client) {                             // If a new client connects,
+
+  if (client) {                             // If a new client connects,
     Serial.println("New Client.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected()) {            // loop while the client's connected
@@ -175,59 +162,60 @@ void loop() {
             client.println("Connection: close");
             client.println();
             
+            // turns the GPIOs on and off
+            if (header.indexOf("GET /26/on") >= 0) {
+              Serial.println("GPIO 26 on");
+              environmentalState = "on";
+              environmentCheck();
+            } else if (header.indexOf("GET /26/off") >= 0) {
+              Serial.println("GPIO 26 off");
+              environmentalState = "off";
+              
+            } else if (header.indexOf("GET /27/on") >= 0) {
+              Serial.println("GPIO 27 on");
+              healthState = "on";
+              healthCheck();
+              delay(100);
+            } else if (header.indexOf("GET /27/off") >= 0) {
+              Serial.println("GPIO 27 off");
+              healthState = "off";
+              
+            }
+            
             // Display the HTML web page
             client.println("<!DOCTYPE html><html>");
             client.println("<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
             client.println("<link rel=\"icon\" href=\"data:,\">");
-            // CSS to style the on/off buttons
+            // CSS to style the on/off buttons 
             // Feel free to change the background-color and font-size attributes to fit your preferences
-            client.println("<style>html {background:radial-gradient(circle, rgba(242,236,10,1) 0%, rgba(121,9,24,1) 35%, rgba(0,255,162,1) 100%); font-family: Serif; display: inline-block; margin: 0px auto; text-align: center;}");
-            client.println(".button { background:linear-gradient(to bottom, #ff0000 0%, #666699 100%); border: none; color: white; padding: 16px 40px;");
-            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: grab;}");
+            client.println("<style>html { background-image: linear-gradient(rgba(255,0,0,0), rgba(255,0,0,1)); font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}");
+            client.println(".button { background-image: linear-gradient(to left bottom, #949C99 0%, #EB0505 100%)border: none; color: white; padding: 16px 40px;");
+            client.println("text-decoration: none; font-size: 30px; margin: 2px; cursor: pointer;}");
             client.println(".button2 {background:linear-gradient(to bottom, #ff0000 0%, #666699 100%)}</style></head>");
+            
             // Web Page Heading
-            client.println("<body><h1>  E-Hoodie User Interface   </h1>");
-            client.println("<h2> Developed By:David Paez </h2>");
-
-            // Display current state, and ON/OFF buttons for GPIO 26
-            client.println("<p>Environmental Reading state - State " + outputState_1 + "</p>");
-            // If the output26State is off, it displays the ON button
-            if (outputState_1 == "off") {
+            client.println("<body><h1>Welcome to the E_Hoodie Interface</h1>");
+            client.println("<h2>Developed by David Paez </h2>");
+            
+            // Display current state, and ON/OFF buttons for GPIO 26  
+            client.println("<p>Environmental State : " + environmentalState + "</p>");
+            // If the environmentalState is off, it displays the ON button       
+            if (environmentalState=="off") {
               client.println("<p><a href=\"/26/on\"><button class=\"button\">ON</button></a></p>");
-            }
-            else {
-              client.println("<p><a href=\"/26/off\"><button class=\"button\">OFF</button></a></p>");
-            }
+            } else {
+              client.println("<p><a href=\"/26/off\"><button class=\"button button2\">OFF</button></a></p>");
+            } 
                
-            // If the output27State is off, it displays the ON button
-            client.println("<p>Agent Health Sensor State:  " + outputState_2 + "</p>");
-            if (outputState_2 == "off") {
+            // Display current state, and ON/OFF buttons for GPIO 27  
+            client.println("<p>Health Monitoring State: " + healthState + "</p>");
+            // If the healthState is off, it displays the ON button       
+            if (healthState=="off") {
               client.println("<p><a href=\"/27/on\"><button class=\"button\">ON</button></a></p>");
             } else {
-              client.println("<p><a href=\"/27/off\"><button class=\"button\">OFF</button></a></p>");
+              client.println("<p><a href=\"/27/off\"><button class=\"button button2\">OFF</button></a></p>");
             }
-      //Edit Sensors Below this line:
-            if (header.indexOf("GET /26/on") >= 0) {
-              outputState_1= "on";
-                if(now-timer_3 > delay_3){
-                  environmentCheck();
-                  timer_3 = now;                  }
-            }
-            else if (header.indexOf("GET /26/off") >= 0) {
-              outputState_2 = "off";
-            } 
-            else if (header.indexOf("GET /27/on") >= 0) {
-              outputState_2 = "on";
-              if(now - timer_2 > delay_2){
-                healthCheck();
-                timer_2 = now;}
-            } 
-            else if (header.indexOf("GET /27/off") >= 0) {
-              outputState_2 = "off";
-            }
-      // Display current state, and ON/OFF buttons for GPIO 27
             client.println("</body></html>");
-
+            
             // The HTTP response ends with another blank line
             client.println();
             // Break out of the while loop
@@ -248,4 +236,3 @@ void loop() {
     Serial.println("");
   }
 }
-
