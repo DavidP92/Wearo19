@@ -2,7 +2,7 @@
 //Code Modified and Designed by David Paez
 
 #include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
+#ifdef _AVR_
 #include <avr/power.h>
 #endif
 //Libraries of Particle Sensor
@@ -37,18 +37,18 @@ int sampleRate = 400;        //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
 int pulseWidth = 411;        //Options: 69, 118, 215, 411
 int adcRange = 2048;         //Options: 2048, 4096, 8192, 16384
 
-#define bigO A1
-#define medO A2
-#define lilO 3
+#define bigO A3
+#define medO A0
+#define lilO A2
 
 #define ledM 16
-#define ledB 30
+#define ledB 24
 #define ledS 12
 #define MBRIGHTNESS 175
 #define BBRIGHTNESS 150
 
-#define PIN A0
-#define N_LEDS 30
+#define stripPIN A6
+#define N_LEDS 20
 
 const uint8_t clear_led[4] = {255, 255, 255, 255};
 const uint8_t clear_bright = 0;
@@ -64,7 +64,7 @@ float temperatureF;
 Adafruit_NeoPixel strip0 = Adafruit_NeoPixel(ledB, bigO, NEO_RGBW + NEO_KHZ800);
 Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(ledM, medO, NEO_RGBW + NEO_KHZ800);
 Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(ledS, lilO, NEO_RGBW + NEO_KHZ800);
-Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(N_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(N_LEDS, stripPIN, NEO_GRB + NEO_KHZ800);
 
 bool agent = false;
 //Timer Variables
@@ -77,7 +77,7 @@ uint8_t delay_2 = 10;    // heartCheck
 uint8_t delay_3 = 20000;   // temperatureCheck
 
 void pulseSetup() {
-  Serial.begin(115200);
+  Serial.begin(57600);
   if (!pulseSensor.begin(Wire, I2C_SPEED_FAST)) {
     Serial.println("Pulse Sensor not detected.... Check wiring or Connection...");
     while (1);
@@ -165,7 +165,19 @@ void setPColor(Adafruit_NeoPixel *obj, const uint8_t *ary, const uint8_t brightn
     obj->show();
   }
 }
-
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(Adafruit_NeoPixel *obj, byte WheelPos) {
+  if (WheelPos < 85) {
+    return obj->Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  } else if (WheelPos < 170) {
+    WheelPos -= 85;
+    return strip0.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else {
+    WheelPos -= 170;
+    return obj->Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
 void rainbow(Adafruit_NeoPixel *obj, uint8_t wait) {
   uint16_t i, j;
   for (j = 0; j < 256; j++) {
@@ -188,53 +200,56 @@ void dynamicBrightness() {
     brightnessDir = !brightnessDir;
 }
 
-void colorselect(byte colorNumber){
+void colorSwitch(byte colorNumber){
   uint8_t a[] = {1, 255, 1, 5};   //Designate Color-------> Red
   uint8_t b[] = {1, 1, 255, 1}; //Designate Color -----> Blue
+  uint8_t f[] = {1,1,1,255};  //Green
   uint8_t c[] = {255, 1, 1};
   uint8_t d[] = {1, 1, 255};
   uint8_t e[] = {255, 255, 255};
+  uint8_t g[] = {1, 255, 1};
+  
 
   switch(colorNumber){
     case 1:               //Red
-      setPColor(&strip0, a, 150); 
-      setPColor(&strip1, a, 150); 
-      setPColor(&strip2, b, 150); 
-      setPColor(&strip3, c, 255);
+      setPColor(&strip0, a, 125); 
+      setPColor(&strip1, a, 125); 
+      setPColor(&strip2, a, 125); 
+      setPColor(&strip3, c, 125);
       break;
     case 2:               //Blue
-      setPColor(&strip0, b, 50); 
-      setPColor(&strip1, b, 50); 
-      setPColor(&strip2,b,50);
-      setPColor(&strip3,d,255);
+      setPColor(&strip0, b, 125); 
+      setPColor(&strip1, b, 125); 
+      setPColor(&strip2,b,125);
+      setPColor(&strip3,d,125);
       break;
     case 3:                //White   
       setPColor(&strip0, clear_led, 155);
       setPColor(&strip1, clear_led, 155);
-      setPColor(&strip3, e, 255);
+      setPColor(&strip2, clear_led, 155);
+      setPColor(&strip3, e, 125);
       break;
     case 4:               //Clearing of Lights 
       setPColor(&strip0, clear_led, clear_bright);  //Turn Off
       setPColor(&strip1, clear_led, clear_bright); // Turn Off
       setPColor(&strip2, clear_led, clear_bright);
       setPColor(&strip3, clear_led, clear_bright);
-  }
-}
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(Adafruit_NeoPixel *obj, byte WheelPos) {
-  if (WheelPos < 85) {
-    return obj->Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-  } else if (WheelPos < 170) {
-    WheelPos -= 85;
-    return strip0.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  } else {
-    WheelPos -= 170;
-    return obj->Color(0, WheelPos * 3, 255 - WheelPos * 3);
+      break;
+    case 5:               //Rainbow Effect
+      rainbow(&strip1, 25);
+      rainbow(&strip0, 25);
+      rainbow(&strip2,25);
+      rainbow(&strip3,25);
+    case 6:             //Green
+      setPColor(&strip0, f, 125);  //Turn Off
+      setPColor(&strip1, f, 125); // Turn Off
+      setPColor(&strip2, f, 125);
+      setPColor(&strip3, g, 125);
   }
 }
 
 void setup() {
+  
   setupPixels(&strip0);
   setupPixels(&strip1);
   setupPixels(&strip2);
@@ -248,40 +263,29 @@ void setup() {
 void loop() {
   // Some example procedures showing how to display to the pixels:
   unsigned long now = millis();
+  heartCheck();
+  if (beatsPerMin> 35){
+    colorSwitch(1);
+    delay(beatsPerMin);
+    colorSwitch(4);
+    beatsPerMin = 0;
+    beatAvg = 0;
+  if(timer_1 - now > delay_1){
+  temperatureCheck();
   
-   if(timer_3 - now > delay_3){
-    temperatureCheck();    
-    Serial.println("[9]");
-    timer_2 = now;
-  }
-  else if(now-timer_3 > delay_3){
-    temperatureCheck();
-    timer_3 = now;
-  } 
-  else if(now - timer_2 > delay_2){
-    heartCheck();
-    if(agent == false){
-      Serial.println("[5]");
-
-      delay(500);
-      Serial.println("[6]");
-      setPColor(&strip0, clear_led, clear_bright);  //Turn Off
-      setPColor(&strip1, clear_led, clear_bright); // Turn Off
-      setPColor(&strip2, clear_led, clear_bright);
-      setPColor(&strip3, clear_led, clear_bright);
+    if(temperatureF < 75){
+      colorSwitch(2);
     }
-    else if (agent == true){
-      Serial.println("[7]");
- 
-      delay(2500);    
-      Serial.println("[8]");
-      setPColor(&strip0, clear_led, clear_bright);  //Turn Off
-      setPColor(&strip1,clear_led,clear_bright);  // Turn Off
-      setPColor(&strip2,clear_led,clear_bright);
-      setPColor(&strip3,clear_led,clear_bright);
-      }
-    timer_1 = now;
+    else if (temperatureF > 75 && temperatureF < 90){
+      colorSwitch(3);
+    }
+    else{
+      colorSwitch(1);
+    }
   }
-  else
-    Serial.println("Please touch sensor!");
+  timer_1 = now;
+}
+  else if (IR < 9000 && beatsPerMin < 50){
+    colorSwitch(5);
+  }
 }
